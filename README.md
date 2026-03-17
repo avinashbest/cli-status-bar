@@ -2,7 +2,11 @@
 
 ![preview](preview.png)
 
-There are only two things that really matter when vibe-coding: **Context Window** and **Usage** left in your session. Context matters because models have been shown to perform worse as context grows (context rot), and usage matters so you can squeeze every last token out of your session instead of leaving value on the table. This statusline keeps both metrics visible so you can focus on building. It auto-detects whether you're on a subscription or an API key and adapts accordingly: subscription users get the full usage bar, API key users get a faster, leaner statusline since usage limits don't apply to them.
+A real-time statusline for [Claude Code](https://github.com/anthropics/claude-code) that shows your current directory, model, context window usage, and session token limits at a glance. One script, zero config. Auto-detects subscription vs API key.
+
+## Why This Statusline
+
+There are only two things that really matter when vibe-coding: **Context Window** and **Usage** left in your session. Context matters because models have been shown to perform worse as context grows (context rot), and usage matters so you can squeeze every last token out of your session instead of leaving value on the table. This statusline keeps both front and center so you can focus on building.
 
 ## Requirements
 
@@ -12,14 +16,29 @@ There are only two things that really matter when vibe-coding: **Context Window*
 
 ## Installation
 
-### Option 1: Quick Install (Recommended)
+### Quick Install (Recommended)
 
 ```bash
-# Download and install
-curl -fsSL https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main/install.sh | bash
+npx claude-statusline
 ```
 
-### Option 2: Manual Install
+Or with bun:
+
+```bash
+bunx claude-statusline
+```
+
+Restart Claude Code or start a new session.
+
+### Clone & Install
+
+```bash
+git clone https://github.com/TahaSabir0/claude-statusline.git
+cd claude-statusline
+./install.sh
+```
+
+### Manual Install
 
 1. **Download the script:**
 
@@ -47,17 +66,6 @@ curl -fsSL https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main/i
    ```
 
 4. **Restart Claude Code** or start a new session.
-
-### Option 3: Clone & Install
-
-```bash
-# Clone the repo
-git clone https://github.com/TahaSabir0/claude-statusline.git
-cd claude-statusline
-
-# Run installer
-./install.sh
-```
 
 ## Features
 
