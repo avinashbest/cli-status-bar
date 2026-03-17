@@ -64,22 +64,6 @@ function getCurrentTask(sessionId) {
   return '';
 }
 
-function getGsdUpdate() {
-  const homeDir = os.homedir();
-  const cacheFile = path.join(homeDir, '.claude', 'cache', 'gsd-update-check.json');
-
-  if (!fs.existsSync(cacheFile)) return '';
-
-  try {
-    const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-    if (cache.update_available) {
-      return `${colors.yellow}\u2B06${colors.reset} `;
-    }
-  } catch (e) {}
-
-  return '';
-}
-
 // Main
 function outputFallback() {
   const contextBar = getContextBar(undefined);
@@ -97,15 +81,11 @@ function processInput(input) {
 
     const contextBar = getContextBar(remaining);
     const task = getCurrentTask(sessionId);
-    const gsdUpdate = getGsdUpdate();
-
     const parts = [];
     parts.push(dirname);
     parts.push(model);
     parts.push(`context: ${contextBar}`);
     if (task) parts.push(`${colors.dim}${task}${colors.reset}`);
-    if (gsdUpdate) parts.push(gsdUpdate);
-
     process.stdout.write(parts.join(' \u2502 '));
   } catch (e) {
     process.stdout.write('Status unavailable');

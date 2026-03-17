@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 
 $HOOKS_DIR = "$env:USERPROFILE\.claude\hooks"
 $SETTINGS_FILE = "$env:USERPROFILE\.claude\settings.json"
-$REPO_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/main"
+$REPO_URL = "https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main"
 
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "  Claude Code Statusline Installer" -ForegroundColor Cyan
@@ -108,5 +108,5 @@ Write-Host "To uninstall:"
 Write-Host "  - Remove ~/.claude/hooks/$SCRIPT_NAME"
 Write-Host "  - Remove the 'statusLine' section from ~/.claude/settings.json"
 Write-Host ""
-Write-Host "For help, visit: https://github.com/YOUR_USERNAME/claude-statusline"
+Write-Host "For help, visit: https://github.com/TahaSabir0/claude-statusline"
 Write-Host ""

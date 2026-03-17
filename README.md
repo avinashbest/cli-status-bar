@@ -1,39 +1,8 @@
 # Claude Code Enhanced Statusline
 
-A customizable, feature-rich statusline for [Claude Code](https://github.com/anthropics/claude-code) that displays real-time information about your coding session.
+![preview](preview.png)
 
-## Features
-
-### 🎯 Full Version (`statusline.js`)
-
-- **Context Usage**: Visual bar showing token usage (green → yellow → orange → red)
-- **API Usage**: Real-time 5-hour session limit tracking with countdown timer
-- **Current Directory**: Shows your working directory
-- **Model Name**: Displays which Claude model you're using (Opus, Sonnet, Haiku)
-- **Current Task**: Shows active task from task list (if using GSD or tasks)
-- **Update Notifications**: Alerts for GSD updates
-- **Adaptive Performance**: Fast after first prompt (1.2s vs 1.5s)
-- **Smart Caching**: Shares usage data across sessions, fallback on API timeout
-
-### ⚡ Lite Version (`statusline-lite.js`)
-
-- Same features as full version **except** API usage tracking
-- Faster response time (~500ms)
-- No external API calls
-- Perfect if you don't need usage limits tracking
-
-## Preview
-
-```
-my-project │ Sonnet 4.5 │ context: ████░░░░░░ 40% │ usage: ███░░░░░░░ 29% (4h15m)
-```
-
-**Color Coding:**
-
-- 🟢 Green: < 50% usage
-- 🟡 Yellow: 50-75% usage
-- 🟠 Orange: 75-90% usage
-- 🔴 Red (blinking): > 90% usage
+There are only two things that really matter when vibe-coding: **Context Window** and **Usage** left in your session. Context matters because models have been shown to perform worse as context grows (context rot), and usage matters so you can squeeze every last token out of your session instead of leaving value on the table. This statusline keeps both front and center so you can focus on building. It comes in two versions: a full version that tracks everything, and a lite version without the usage bar for users on API keys.
 
 ## Requirements
 
@@ -47,7 +16,7 @@ my-project │ Sonnet 4.5 │ context: ████░░░░░░ 40% │ us
 
 ```bash
 # Download and install
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main/install.sh | bash
 ```
 
 ### Option 2: Manual Install
@@ -56,10 +25,10 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/mai
 
    ```bash
    # For full version with API usage
-   curl -o ~/.claude/hooks/statusline.js https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/main/statusline.js
+   curl -o ~/.claude/hooks/statusline.js https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main/statusline.js
 
    # OR for lite version (faster, no API calls)
-   curl -o ~/.claude/hooks/statusline-lite.js https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/main/statusline-lite.js
+   curl -o ~/.claude/hooks/statusline-lite.js https://raw.githubusercontent.com/TahaSabir0/claude-statusline/main/statusline-lite.js
    ```
 
 2. **Make it executable:**
@@ -91,12 +60,37 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/claude-statusline/mai
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/claude-statusline.git
+git clone https://github.com/TahaSabir0/claude-statusline.git
 cd claude-statusline
 
 # Run installer
 ./install.sh
 ```
+
+## Features
+
+### 🎯 Full Version (`statusline.js`)
+
+- **Context Usage**: Visual bar showing token usage (green → yellow → orange → red)
+- **API Usage**: Real-time 5-hour session limit tracking with countdown timer
+- **Current Directory**: Shows your working directory
+- **Model Name**: Displays which Claude model you're using (Opus, Sonnet, Haiku)
+- **Adaptive Performance**: Fast after first prompt (1.2s vs 1.5s)
+- **Smart Caching**: Shares usage data across sessions, fallback on API timeout
+
+### ⚡ Lite Version (`statusline-lite.js`)
+
+- Same features as full version **except** API usage tracking
+- Faster response time (~500ms)
+- No external API calls
+- Perfect if you don't need usage limits tracking
+
+**Color Coding:**
+
+- 🟢 Green: < 50% usage
+- 🟡 Yellow: 50-75% usage
+- 🟠 Orange: 75-90% usage
+- 🔴 Red (blinking): > 90% usage
 
 ## How It Works
 
