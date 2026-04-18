@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Cursor CLI Provider — adapter for Cursor's agent CLI
 // Config: ~/.cursor/cli-config.json
-// Usage tracking: cookie-based scraping from Cursor dashboard API
+// Usage tracking: via api2.cursor.sh/auth/usage with access token from macOS Keychain
 
 const path = require('path');
 const os = require('os');
@@ -57,7 +57,6 @@ class CursorProvider extends BaseProvider {
 
   /**
    * Read Cursor auth info from cli-config.json
-   * The auth token is stored in the serverConfigCache and cookie storage
    */
   getCredentials() {
     try {
@@ -66,7 +65,6 @@ class CursorProvider extends BaseProvider {
 
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-      // Extract auth info
       if (config.authInfo) {
         return {
           email: config.authInfo.email,
@@ -83,45 +81,36 @@ class CursorProvider extends BaseProvider {
   }
 
   /**
-   * Attempt to read the Cursor session token from various storage locations
-   * Used for cookie-based dashboard scraping
-   * @returns {string|null} session token
+   * Get the Cursor access token from macOS Keychain or other storage
+   * Cursor stores JWT access tokens under "cursor-access-token" service name
+   * @returns {string|null} JWT access token
    */
-  _getSessionToken() {
+  _getAccessToken() {
     try {
-      // Try reading from macOS Keychain
+      // macOS Keychain — Cursor stores JWT under "cursor-access-token"
       if (os.platform() === 'darwin') {
         try {
           const { execSync } = require('child_process');
-          const raw = execSync(
-            'security find-generic-password -s "Cursor-credentials" -w 2>/dev/null',
+          const token = execSync(
+            'security find-generic-password -s "cursor-access-token" -a "cursor-user" -w 2>/dev/null',
             { encoding: 'utf8', timeout: 1000 }
-          );
-          const creds = JSON.parse(raw.trim());
-          if (creds.accessToken) return creds.accessToken;
-          if (creds.sessionToken) return creds.sessionToken;
+          ).trim();
+          if (token && token.startsWith('eyJ')) return token;
         } catch (e) {}
       }
 
-      // Try reading WorkosCursorSessionToken from local storage db
-      // This is in the Cursor app's storage, not the CLI config
+      // Linux/Windows — try credential files
       const possiblePaths = [
-        path.join(os.homedir(), 'Library', 'Application Support', 'Cursor', 'Local Storage', 'leveldb'),
-        path.join(os.homedir(), '.config', 'Cursor', 'Local Storage', 'leveldb'),
-        path.join(os.homedir(), 'AppData', 'Roaming', 'Cursor', 'Local Storage', 'leveldb')
+        path.join(os.homedir(), '.config', 'Cursor', 'credentials.json'),
+        path.join(os.homedir(), 'AppData', 'Roaming', 'Cursor', 'credentials.json')
       ];
 
-      for (const dbPath of possiblePaths) {
-        if (fs.existsSync(dbPath)) {
-          // Read .log files for the session token (simple text search)
-          const logFiles = fs.readdirSync(dbPath).filter(f => f.endsWith('.log'));
-          for (const logFile of logFiles) {
-            try {
-              const content = fs.readFileSync(path.join(dbPath, logFile), 'utf8');
-              const match = content.match(/WorkosCursorSessionToken[^\w]+([\w.-]+)/);
-              if (match) return match[1];
-            } catch (e) {}
-          }
+      for (const credPath of possiblePaths) {
+        if (fs.existsSync(credPath)) {
+          try {
+            const creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
+            if (creds.accessToken) return creds.accessToken;
+          } catch (e) {}
         }
       }
 
@@ -132,24 +121,24 @@ class CursorProvider extends BaseProvider {
   }
 
   /**
-   * Fetch usage from Cursor's dashboard API using session cookie
-   * This is a best-effort scraping approach since no public API exists
+   * Fetch usage from Cursor's internal API (api2.cursor.sh/auth/usage)
+   * Uses the JWT access token from macOS Keychain for authentication
    */
   fetchUsage(callback) {
     try {
-      const sessionToken = this._getSessionToken();
-      if (!sessionToken) return callback(null);
+      const accessToken = this._getAccessToken();
+      if (!accessToken) return callback(null);
 
       const timeout = this.getTimeout();
 
       const req = https.request({
-        hostname: 'www.cursor.com',
-        path: '/api/usage',
+        hostname: 'api2.cursor.sh',
+        path: '/auth/usage',
         method: 'GET',
         headers: {
-          'Cookie': `WorkosCursorSessionToken=${sessionToken}`,
-          'User-Agent': 'cli-status-bar/1.0',
-          'Accept': 'application/json'
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'cli-status-bar/2.0'
         },
         timeout: timeout
       }, (res) => {
@@ -159,24 +148,42 @@ class CursorProvider extends BaseProvider {
           try {
             const usage = JSON.parse(data);
 
-            // Parse Cursor's usage response
-            // Expected fields vary, but typically include premium request counts
-            if (usage.numRequests != null && usage.maxRequests != null) {
-              const percentage = Math.round((usage.numRequests / usage.maxRequests) * 100);
-              const remaining = usage.maxRequests - usage.numRequests;
+            // Cursor returns usage per model, e.g.:
+            // { "gpt-4": { numRequests, numTokens, maxRequestUsage, maxTokenUsage }, "startOfMonth": "..." }
+            // Aggregate across all models
+            let totalRequests = 0;
+            let totalTokens = 0;
+            let maxRequests = null;
+            let maxTokens = null;
+            let startOfMonth = usage.startOfMonth;
 
-              const bar = getUsageBar(percentage, `${remaining} left`);
-              cache.setCache(this.name, 'usage', bar);
-              callback(bar);
-            } else if (usage.usage != null) {
-              // Alternative response format
-              const percentage = Math.round(usage.usage * 100);
-              const bar = getUsageBar(percentage);
-              cache.setCache(this.name, 'usage', bar);
-              callback(bar);
-            } else {
-              callback(null);
+            for (const [model, stats] of Object.entries(usage)) {
+              if (model === 'startOfMonth') continue;
+              if (stats && typeof stats === 'object') {
+                totalRequests += (stats.numRequestsTotal || stats.numRequests || 0);
+                totalTokens += (stats.numTokens || 0);
+                if (stats.maxRequestUsage != null) maxRequests = (maxRequests || 0) + stats.maxRequestUsage;
+                if (stats.maxTokenUsage != null) maxTokens = (maxTokens || 0) + stats.maxTokenUsage;
+              }
             }
+
+            // Build usage bar
+            let bar;
+            if (maxRequests && maxRequests > 0) {
+              const percentage = Math.round((totalRequests / maxRequests) * 100);
+              bar = getUsageBar(percentage, `${totalRequests}/${maxRequests} reqs`);
+            } else if (maxTokens && maxTokens > 0) {
+              const percentage = Math.round((totalTokens / maxTokens) * 100);
+              bar = getUsageBar(percentage, `${Math.round(totalTokens / 1000)}k tokens`);
+            } else if (totalRequests > 0) {
+              // No max known — just show count
+              bar = `${colors.dim}${totalRequests} reqs this period${colors.reset}`;
+            } else {
+              bar = `${colors.green}0 reqs${colors.reset}`;
+            }
+
+            cache.setCache(this.name, 'usage', bar);
+            callback(bar);
           } catch (e) {
             callback(null);
           }
