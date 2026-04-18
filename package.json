@@ -1,21 +1,36 @@
 {
-  "name": "claude-best-statusline",
-  "version": "1.0.1",
-  "description": "A customizable statusline for Claude Code that tracks context usage and session limits",
+  "name": "cli-status-bar",
+  "version": "2.0.0",
+  "description": "Universal statusline for CLI agents — Claude Code, Cursor, Copilot, and Gemini. Tracks context window, model, usage, and session limits at a glance.",
+  "main": "src/statusline.js",
   "bin": {
-    "claude-best-statusline": "bin/install.js"
+    "cli-status-bar": "bin/install.js"
+  },
+  "scripts": {
+    "test": "node test/run.js",
+    "start": "node src/statusline.js"
   },
   "keywords": [
+    "cli",
+    "statusline",
+    "status-bar",
     "claude",
     "claude-code",
-    "statusline",
+    "cursor",
+    "copilot",
+    "gemini",
+    "ai-agent",
+    "context-window",
     "vibe-coding",
-    "context-window"
+    "terminal"
   ],
-  "author": "TahaSabir0",
+  "author": "avinashbest",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TahaSabir0/claude-statusline"
+    "url": "https://github.com/avinashbest/cli-status-bar"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
