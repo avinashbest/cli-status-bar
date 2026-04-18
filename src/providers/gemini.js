@@ -117,6 +117,7 @@ class GeminiProvider extends BaseProvider {
   getInstallConfig(scriptPath) {
     const hookScriptPath = path.join(
       path.dirname(scriptPath),
+      'src',
       'hooks',
       'gemini-after-agent.js'
     ).replace(/\\/g, '/');
